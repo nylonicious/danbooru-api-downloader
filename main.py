@@ -1,7 +1,6 @@
 import asyncio
 import os
 import re
-import time
 from sys import version_info
 from urllib.parse import unquote, urlparse
 
@@ -16,11 +15,11 @@ class DanbooruAPI:
     async def get_picture_urls(self, url, page_number):
         tasks = []
         tags = unquote(url.split('tags=')[1].split('&')[0].replace('+', ' ').strip())
-        desiredpath = os.getcwd() + '\\' + re.sub('[<>:\"/|?*]', ' ', tags).strip() + '\\' + urlparse(url).netloc + '\\'
+        desiredpath = os.path.join(os.getcwd(), re.sub('[<>:\"/|?*]', ' ', tags).strip(), urlparse(url).netloc)
         if not os.path.exists(desiredpath):
             os.makedirs(desiredpath)
         timeout = aiohttp.ClientTimeout(total=30)
-        headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:67.0) Gecko/20100101 Firefox/67.0"}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0'}
         async with aiohttp.ClientSession(timeout=timeout, headers=headers) as self.session:
             for n in range(1, page_number + 1):
                 async with self.session.get(f"{url.split('?')[0]}.json", params={'tags': tags, 'page': n}) as response:
@@ -34,7 +33,7 @@ class DanbooruAPI:
                                 picture_url = item['file_url']
                                 picture_name_no_fix = unquote(urlparse(picture_url).path.split('/')[-1])
                                 picture_name = re.sub('[<>:\"/|?*]', ' ', picture_name_no_fix)
-                                picture_path = desiredpath + picture_name
+                                picture_path = os.path.join(desiredpath, picture_name)
                                 if not os.path.isfile(picture_path):
                                     if 'yande.re' in picture_url:
                                         await self.download(picture_url, picture_path)
@@ -55,10 +54,7 @@ class DanbooruAPI:
 def main():
     urliput = input('Paste the url you wish to download images from: ')
     page_number = int(input('Number of pages you wish to download: '))
-    x = time.time()
     DanbooruAPI(urliput, page_number)
-    print('Time to complete script: ', time.time() - x)
-    input('Press Enter to continue . . . ')
 
 
 if __name__ == '__main__':
