@@ -13,7 +13,6 @@ class DanbooruAPI:
         asyncio.run(self.get_picture_urls(url, page_number))
 
     async def get_picture_urls(self, url, page_number):
-        tasks = []
         tags = unquote(url.split('tags=')[1].split('&')[0].replace('+', ' ').strip())
         desiredpath = Path.cwd() / re.sub('[<>:\"/|?*]', ' ', tags).strip() / urlparse(url).netloc
         if not desiredpath.exists():
@@ -35,11 +34,7 @@ class DanbooruAPI:
                                 picture_name = re.sub('[<>:\"/|?*]', ' ', picture_name_no_fix)
                                 picture_path = desiredpath / picture_name
                                 if not picture_path.is_file():
-                                    if 'yande.re' in picture_url:
-                                        await self.download(picture_url, picture_path)
-                                    else:
-                                        tasks.append(asyncio.create_task(self.download(picture_url, picture_path)))
-                        await asyncio.gather(*tasks)
+                                    await self.download(picture_url, picture_path)
 
     async def download(self, picture_url, picture_path):
         async with self.session.get(picture_url) as r:
