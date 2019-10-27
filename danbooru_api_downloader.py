@@ -7,49 +7,41 @@ from urllib.parse import unquote, urlparse
 import aiohttp
 
 
-class DanbooruAPI:
-    def __init__(self, url, page_number):
-        self.session = None
-        asyncio.run(self.get_picture_urls(url, page_number))
+async def queue_downloads(url):
+    tags = unquote(url.split('tags=')[1].split('&')[0].replace('+', ' ').strip())
+    desired_path = Path.cwd() / re.sub('[<>:\"/|?*]', ' ', tags).strip() / urlparse(url).netloc
+    desired_path.mkdir(parents=True, exist_ok=True)
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0'}
+    async with aiohttp.ClientSession(headers=headers) as session:
+        counter = 1
+        while True:
+            async with session.get(f"{url.split('?')[0]}.json", params={'tags': tags, 'page': counter}) as response:
+                data = await response.json()
+                counter += 1
+                if len(data) == 0:
+                    break
+                else:
+                    for item in data:
+                        if 'file_url' in item:
+                            picture_url = item['file_url']
+                            picture_name = re.sub('[<>:\"/|?*]', ' ', unquote(urlparse(picture_url).path.split('/')[-1]))
+                            picture_path = desired_path / picture_name
+                            if not picture_path.is_file():
+                                await download(session, picture_url, picture_path)
 
-    async def get_picture_urls(self, url, page_number):
-        tags = unquote(url.split('tags=')[1].split('&')[0].replace('+', ' ').strip())
-        desiredpath = Path.cwd() / re.sub('[<>:\"/|?*]', ' ', tags).strip() / urlparse(url).netloc
-        if not desiredpath.exists():
-            desiredpath.mkdir(parents=True)
-        timeout = aiohttp.ClientTimeout(total=60)
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0'}
-        async with aiohttp.ClientSession(timeout=timeout, headers=headers) as self.session:
-            for n in range(1, page_number + 1):
-                async with self.session.get(f"{url.split('?')[0]}.json", params={'tags': tags, 'page': n}) as response:
-                    data = await response.json()
-                    if len(data) == 0:
-                        print('End of pages')
-                        break
-                    else:
-                        for item in data:
-                            if 'file_url' in item:
-                                picture_url = item['file_url']
-                                picture_name_no_fix = unquote(urlparse(picture_url).path.split('/')[-1])
-                                picture_name = re.sub('[<>:\"/|?*]', ' ', picture_name_no_fix)
-                                picture_path = desiredpath / picture_name
-                                if not picture_path.is_file():
-                                    await self.download(picture_url, picture_path)
 
-    async def download(self, picture_url, picture_path):
-        async with self.session.get(picture_url) as r:
-            if r.status == 200:
-                with open(picture_path, 'wb') as f:
-                    print(f'Downloading {picture_url}')
-                    f.write(await r.read())
-            else:
-                print(f'Error {r.status} while getting request for {picture_url}')
+async def download(session, picture_url, picture_path):
+    async with session.get(picture_url) as r:
+        if r.status == 200:
+            picture_path.write_bytes(await r.read())
+            print(f'Downloaded {picture_url}')
+        else:
+            print(f'Error {r.status} while getting request for {picture_url}')
 
 
 def main():
     urliput = input('Paste the url you wish to download images from: ')
-    page_number = int(input('Number of pages you wish to download: '))
-    DanbooruAPI(urliput, page_number)
+    asyncio.run(queue_downloads(urliput))
 
 
 if __name__ == '__main__':
