@@ -39,10 +39,38 @@ async def download(session, picture_url, picture_path):
         else:
             print(f'Error {r.status} while getting request for {picture_url}')
 
+def quicktutorial(rulefile):
+    print(f""""{rulefile}" should formatted like this:
+ breasts
+ ass\n""")
+
 
 def main():
-    urlinput = input('Otherwise, just type in what tags you want here (Press space for multiple tags): ')
-    tags = urlinput.split()
+    batchdir = os.path.dirname(os.path.realpath(__file__))
+    if "/" in batchdir and not batchdir.endswith("/"):
+        batchdir += "/"
+    elif not batchdir.endswith("\\"):
+        batchdir += "\\"
+
+    batchfile = os.path.basename(__file__)
+    batchname = os.path.splitext(batchfile)[0]
+    os.chdir(batchdir)
+    
+    rulefile = batchname + ".txt"
+    
+    if not os.path.exists(rulefile):
+        open(rulefile, 'w').close()
+    if os.path.getsize(rulefile) < 1:
+        print("\nPlease add your tags per line in \"" + rulefile + "\" then restart.\n")
+        quicktutorial(rulefile)
+        urlinput = input('Otherwise, just type in what tags you want here (Press space for multiple tags): ')
+        tags = urlinput.split()
+    else:
+        print("Reading " + rulefile + " . . .")
+        with open(rulefile, 'r', encoding="utf-8") as f:
+            tags = f.read().splitlines()
+    
+    
     for t in tags:
         print()
         print("Started scraping " + t)
