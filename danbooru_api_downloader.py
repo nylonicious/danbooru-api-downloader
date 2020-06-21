@@ -10,8 +10,6 @@ import aiohttp
 
 async def queue_downloads(url):
     tags = unquote(url.split('tags=')[1].split('&')[0].replace('+', ' ').strip())
-    desired_path = Path.cwd() / re.sub('[<>:\"/|?*]', ' ', tags).strip() / urlparse(url).netloc
-    desired_path.mkdir(parents=True, exist_ok=True)
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0'}
     async with aiohttp.ClientSession(headers=headers) as session:
         counter = 1
@@ -22,6 +20,8 @@ async def queue_downloads(url):
                 if len(data) == 0:
                     break
                 else:
+                    desired_path = Path.cwd() / re.sub('[<>:\"/|?*]', ' ', tags).strip() / urlparse(url).netloc
+                    desired_path.mkdir(parents=True, exist_ok=True)
                     for item in data:
                         if 'file_url' in item:
                             picture_url = item['file_url']
