@@ -1,5 +1,6 @@
 import asyncio
 import re
+import os
 from pathlib import Path
 from sys import version_info
 from urllib.parse import unquote, urlparse
@@ -40,10 +41,18 @@ async def download(session, picture_url, picture_path):
 
 
 def main():
-    urliput = input('Paste the url you wish to download images from: ')
-    asyncio.run(queue_downloads(urliput))
+    urlinput = input('Otherwise, just type in what tags you want here (Press space for multiple tags): ')
+    tags = urlinput.split()
+    for t in tags:
+        print()
+        print("Started scraping " + t)
+        os.system("title Scraping " + t)
+        asyncio.run(queue_downloads("https://yande.re/post?tags=" + t + "+"))
+        asyncio.run(queue_downloads("https://konachan.com/post?tags=" + t + "+"))
+        asyncio.run(queue_downloads("https://danbooru.donmai.us/posts?tags=" + t + "+"))
 
 
 if __name__ == '__main__':
     assert version_info >= (3, 7), 'Script requires Python 3.7+.'
     main()
+    os.system("pause")
