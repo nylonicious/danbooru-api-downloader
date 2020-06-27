@@ -47,7 +47,7 @@ def quicktutorial(rulefile):
     print(f""""{rulefile}" should formatted like this:\nblue_eyes\ntifa_lockhart\n""")
 
 
-def main():
+async def main():
     batchdir = os.path.dirname(os.path.realpath(__file__))
     if "/" in batchdir and not batchdir.endswith("/"):
         batchdir += "/"
@@ -74,15 +74,14 @@ def main():
             tags = f.read().splitlines()
 
     for t in tags:
-        print()
         print("Started scraping " + t)
-        os.system("title Scraping " + t)
-        asyncio.run(queue_downloads("https://yande.re/post?tags=" + t + "+"))
-        asyncio.run(queue_downloads("https://konachan.com/post?tags=" + t + "+"))
-        asyncio.run(queue_downloads("https://danbooru.donmai.us/posts?tags=" + t + "+"))
+        tasks = [asyncio.create_task(queue_downloads(f"https://yande.re/post?tags={t}+")),
+                 asyncio.create_task(queue_downloads(f"https://konachan.com/post?tags={t}+")),
+                 asyncio.create_task(queue_downloads(f"https://danbooru.donmai.us/posts?tags={t}+"))]
+        await asyncio.gather(*tasks)
 
 
 if __name__ == '__main__':
     assert version_info >= (3, 7), 'Script requires Python 3.7+.'
-    main()
+    asyncio.run(main())
     input("Press any key to continue...")
