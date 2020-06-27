@@ -1,6 +1,6 @@
 import asyncio
-import re
 import os
+import re
 from pathlib import Path
 from sys import version_info
 from urllib.parse import unquote, urlparse
@@ -83,4 +83,4 @@ def main():
 if __name__ == '__main__':
     assert version_info >= (3, 7), 'Script requires Python 3.7+.'
     main()
-    os.system("pause")
+    input("Press any key to continue...")
