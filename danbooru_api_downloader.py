@@ -1,7 +1,6 @@
 import asyncio
-import os
+import pathlib
 import re
-from pathlib import Path
 from sys import version_info
 from urllib.parse import unquote, urlparse
 
@@ -21,15 +20,15 @@ async def queue_downloads(url):
                 if len(data) == 0:
                     break
                 else:
-                    desired_path = Path.cwd() / \
-                        re.sub('[<>:\"/|?*]', ' ', tags).strip() / urlparse(url).netloc
+                    desired_path = pathlib.Path.cwd().joinpath(
+                        re.sub('[<>:\"/|?*]', ' ', tags).strip()).joinpath(urlparse(url).netloc)
                     desired_path.mkdir(parents=True, exist_ok=True)
                     for item in data:
                         if 'file_url' in item:
                             picture_url = item['file_url']
                             picture_name = re.sub(
                                 '[<>:\"/|?*]', ' ', unquote(urlparse(picture_url).path.split('/')[-1]))
-                            picture_path = desired_path / picture_name
+                            picture_path = desired_path.joinpath(picture_name)
                             if not picture_path.is_file():
                                 await download(session, picture_url, picture_path)
 
@@ -48,28 +47,20 @@ def quicktutorial(rulefile):
 
 
 async def main():
-    batchdir = os.path.dirname(os.path.realpath(__file__))
-    if "/" in batchdir and not batchdir.endswith("/"):
-        batchdir += "/"
-    elif not batchdir.endswith("\\"):
-        batchdir += "\\"
+    batchdir = pathlib.Path(pathlib.Path(__file__).absolute().parent)
 
-    batchfile = os.path.basename(__file__)
-    batchname = os.path.splitext(batchfile)[0]
-    os.chdir(batchdir)
+    rulefile = batchdir.joinpath("tags.txt")
 
-    rulefile = batchname + ".txt"
-
-    if not os.path.exists(rulefile):
-        open(rulefile, 'w').close()
-    if os.path.getsize(rulefile) < 1:
-        print("\nPlease add your tags per line in \"" + rulefile + "\" then restart.\n")
+    if not rulefile.exists():
+        rulefile.touch()
+    if rulefile.stat().st_size < 1:
+        print(f"\nPlease add your tags per line in \"{rulefile}\" then restart.\n")
         quicktutorial(rulefile)
         urlinput = input(
             'Otherwise, just type in what tags you want here (Press space for multiple tags): ')
         tags = urlinput.split()
     else:
-        print("Reading " + rulefile + " . . .")
+        print(f"Reading {rulefile} . . .")
         with open(rulefile, 'r', encoding="utf-8") as f:
             tags = f.read().splitlines()
 
