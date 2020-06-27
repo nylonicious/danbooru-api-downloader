@@ -44,9 +44,7 @@ async def download(session, picture_url, picture_path):
 
 
 def quicktutorial(rulefile):
-    print(f""""{rulefile}" should formatted like this:
- breasts
- ass\n""")
+    print(f""""{rulefile}" should formatted like this:\nblue_eyes\ntifa_lockhart\n""")
 
 
 def main():
