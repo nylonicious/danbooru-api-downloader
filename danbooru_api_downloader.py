@@ -76,5 +76,8 @@ async def main():
 
 if __name__ == "__main__":
     assert version_info >= (3, 7), "Script requires Python 3.7+."
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt")
     input("Press any key to continue...")
